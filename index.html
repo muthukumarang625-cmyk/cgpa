@@ -1,0 +1,520 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CGPA Ledger</title>
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#1B2A4A">
+<link rel="icon" href="icon-192.png">
+<link rel="apple-touch-icon" href="icon-192.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="CGPA Ledger">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Source+Serif+4:opsz,wght@8..60,400;8..60,600;8..60,700&family=IBM+Plex+Mono:wght@400;500;600&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --ink:#1B2A4A;
+    --paper:#F2EDE1;
+    --paper-line:#DCD3BE;
+    --brass:#B08D57;
+    --maroon:#7A2E2E;
+    --charcoal:#2A2620;
+    --muted:#6B6455;
+    --good:#3D6B4C;
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{
+    background:var(--paper);
+    background-image:
+      linear-gradient(var(--paper-line) 1px, transparent 1px);
+    background-size: 100% 2.15em;
+    color:var(--charcoal);
+    font-family:'Inter',sans-serif;
+    min-height:100vh;
+    padding:24px 16px 80px;
+  }
+  .wrap{max-width:720px;margin:0 auto;}
+
+  /* Header / stamp */
+  header{
+    display:flex;
+    justify-content:space-between;
+    align-items:flex-start;
+    border-bottom:3px double var(--ink);
+    padding-bottom:14px;
+    margin-bottom:22px;
+  }
+  .title-block h1{
+    font-family:'Source Serif 4', serif;
+    font-weight:700;
+    font-size:1.7rem;
+    margin:0 0 2px;
+    letter-spacing:0.01em;
+    color:var(--ink);
+  }
+  .title-block .sub{
+    font-family:'IBM Plex Mono', monospace;
+    font-size:0.68rem;
+    letter-spacing:0.14em;
+    text-transform:uppercase;
+    color:var(--muted);
+  }
+  .seal{
+    font-family:'IBM Plex Mono', monospace;
+    font-size:0.62rem;
+    letter-spacing:0.08em;
+    color:var(--brass);
+    border:1.5px solid var(--brass);
+    border-radius:50%;
+    width:64px;height:64px;
+    display:flex;align-items:center;justify-content:center;
+    text-align:center;
+    transform:rotate(-8deg);
+    line-height:1.15;
+    flex-shrink:0;
+    padding:4px;
+  }
+
+  /* CGPA summary */
+  .cgpa-band{
+    background:var(--ink);
+    color:var(--paper);
+    border-radius:4px;
+    padding:18px 20px;
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    margin-bottom:26px;
+    box-shadow: 3px 3px 0 var(--brass);
+  }
+  .cgpa-band .label{
+    font-family:'IBM Plex Mono', monospace;
+    font-size:0.7rem;
+    letter-spacing:0.12em;
+    text-transform:uppercase;
+    opacity:0.75;
+    margin-bottom:4px;
+  }
+  .cgpa-band .value{
+    font-family:'Source Serif 4', serif;
+    font-weight:700;
+    font-size:2.4rem;
+    line-height:1;
+  }
+  .cgpa-band .credits{
+    text-align:right;
+    font-family:'IBM Plex Mono', monospace;
+    font-size:0.78rem;
+    opacity:0.85;
+  }
+
+  /* Semester block */
+  .quick-nav{
+    display:flex;
+    flex-wrap:wrap;
+    gap:6px;
+    margin-bottom:18px;
+    position:sticky;
+    top:8px;
+    z-index:5;
+  }
+  .quick-nav a{
+    font-family:'IBM Plex Mono', monospace;
+    font-size:0.72rem;
+    text-decoration:none;
+    color:var(--ink);
+    background:rgba(255,255,255,0.85);
+    border:1px solid var(--brass);
+    border-radius:20px;
+    padding:4px 11px;
+    white-space:nowrap;
+  }
+  .semester{
+    background:rgba(255,255,255,0.55);
+    border:1px solid var(--paper-line);
+    border-left:4px solid var(--brass);
+    margin-bottom:20px;
+    padding:16px 16px 12px;
+    border-radius:2px;
+  }
+  .sem-head{
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    margin-bottom:10px;
+    gap:10px;
+  }
+  .sem-head input.sem-name{
+    font-family:'Source Serif 4', serif;
+    font-weight:600;
+    font-size:1.05rem;
+    color:var(--ink);
+    background:transparent;
+    border:none;
+    border-bottom:1px dashed transparent;
+    padding:2px 0;
+    width:100%;
+  }
+  .sem-head input.sem-name:focus{
+    outline:none;
+    border-bottom:1px dashed var(--brass);
+  }
+  .sem-sgpa{
+    font-family:'IBM Plex Mono', monospace;
+    font-size:0.85rem;
+    color:var(--good);
+    font-weight:600;
+    white-space:nowrap;
+  }
+  .mode-toggle{
+    font-family:'IBM Plex Mono', monospace;
+    font-size:0.66rem;
+    background:none;
+    border:none;
+    color:var(--brass);
+    cursor:pointer;
+    padding:0 0 10px;
+    text-decoration:underline;
+    display:block;
+  }
+  .quick-fields{
+    display:flex;
+    gap:14px;
+    padding:8px 0 4px;
+  }
+  .quick-fields label{
+    font-family:'IBM Plex Mono', monospace;
+    font-size:0.68rem;
+    text-transform:uppercase;
+    letter-spacing:0.06em;
+    color:var(--muted);
+    display:flex;
+    flex-direction:column;
+    gap:4px;
+    flex:1;
+  }
+  .quick-fields input{
+    font-family:'IBM Plex Mono', monospace;
+    font-size:0.95rem;
+    border:1px solid var(--paper-line);
+    border-radius:3px;
+    background:#fff;
+    padding:7px 8px;
+    color:var(--charcoal);
+  }
+
+  .subject-row{
+    display:grid;
+    grid-template-columns: 1fr 62px 78px 30px;
+    gap:8px;
+    align-items:center;
+    padding:6px 0;
+    border-bottom:1px solid var(--paper-line);
+  }
+  .subject-row input[type="text"]{
+    font-family:'Inter',sans-serif;
+    font-size:0.88rem;
+    border:none;
+    background:transparent;
+    padding:4px 2px;
+    color:var(--charcoal);
+  }
+  .subject-row input[type="text"]:focus{outline:none;border-bottom:1px solid var(--brass);}
+  .subject-row input[type="number"]{
+    font-family:'IBM Plex Mono', monospace;
+    font-size:0.85rem;
+    border:1px solid var(--paper-line);
+    border-radius:3px;
+    background:#fff;
+    padding:5px 4px;
+    width:100%;
+    text-align:center;
+  }
+  select.grade{
+    font-family:'IBM Plex Mono', monospace;
+    font-size:0.85rem;
+    border:1px solid var(--paper-line);
+    border-radius:3px;
+    background:#fff;
+    padding:5px 2px;
+    width:100%;
+    color:var(--charcoal);
+  }
+  .rm-subject{
+    background:none;
+    border:none;
+    color:var(--maroon);
+    font-size:1.1rem;
+    cursor:pointer;
+    line-height:1;
+  }
+  .col-labels{
+    display:grid;
+    grid-template-columns: 1fr 62px 78px 30px;
+    gap:8px;
+    font-family:'IBM Plex Mono', monospace;
+    font-size:0.6rem;
+    letter-spacing:0.08em;
+    text-transform:uppercase;
+    color:var(--muted);
+    padding-bottom:4px;
+    border-bottom:1px solid var(--ink);
+  }
+
+  .sem-footer{
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    margin-top:10px;
+  }
+  .add-subject{
+    font-family:'IBM Plex Mono', monospace;
+    font-size:0.75rem;
+    background:none;
+    border:1px dashed var(--brass);
+    color:var(--brass);
+    border-radius:3px;
+    padding:5px 10px;
+    cursor:pointer;
+  }
+  .rm-semester{
+    font-family:'IBM Plex Mono', monospace;
+    font-size:0.68rem;
+    background:none;
+    border:none;
+    color:var(--muted);
+    cursor:pointer;
+    text-decoration:underline;
+  }
+
+  .add-semester-wrap{text-align:center;margin:24px 0 8px;}
+  .add-semester{
+    font-family:'Source Serif 4', serif;
+    font-weight:600;
+    font-size:0.95rem;
+    background:var(--ink);
+    color:var(--paper);
+    border:none;
+    border-radius:4px;
+    padding:11px 26px;
+    cursor:pointer;
+    box-shadow: 2px 2px 0 var(--brass);
+  }
+  .add-semester:active{transform:translate(1px,1px);box-shadow:1px 1px 0 var(--brass);}
+
+  .scale-note{
+    margin-top:30px;
+    font-family:'IBM Plex Mono', monospace;
+    font-size:0.68rem;
+    color:var(--muted);
+    text-align:center;
+    line-height:1.7;
+    border-top:1px solid var(--paper-line);
+    padding-top:14px;
+  }
+
+  button:focus-visible, select:focus-visible, input:focus-visible{
+    outline:2px solid var(--brass);
+    outline-offset:1px;
+  }
+
+  @media (max-width:420px){
+    .cgpa-band .value{font-size:1.9rem;}
+    .subject-row{grid-template-columns: 1fr 50px 68px 26px;}
+    .col-labels{grid-template-columns: 1fr 50px 68px 26px;}
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header>
+    <div class="title-block">
+      <h1>CGPA Ledger</h1>
+      <div class="sub">Semester-wise grade register</div>
+    </div>
+    <div class="seal">10-PT&nbsp;SCALE</div>
+  </header>
+
+  <div class="cgpa-band">
+    <div>
+      <div class="label">Overall CGPA</div>
+      <div class="value" id="cgpaValue">0.00</div>
+    </div>
+    <div class="credits" id="totalCredits">0 credits earned</div>
+  </div>
+
+  <div class="quick-nav" id="quickNav"></div>
+
+  <div id="semesters"></div>
+
+  <div class="add-semester-wrap">
+    <button class="add-semester" onclick="addSemester()">+ Add Semester</button>
+  </div>
+
+  <div class="scale-note">
+    O = 10 · A+ = 9 · A = 8 · B+ = 7 · B = 6 · C = 5 · RA = 0<br>
+    SGPA = Σ(credit × grade point) / Σ(credit) — CGPA computed the same way across all semesters
+  </div>
+
+</div>
+
+<script>
+const GRADES = [
+  {label:'O', point:10},
+  {label:'A+', point:9},
+  {label:'A', point:8},
+  {label:'B+', point:7},
+  {label:'B', point:6},
+  {label:'C', point:5},
+  {label:'RA', point:0},
+];
+
+let semCounter = 0;
+let subCounter = 0;
+let state = []; // [{id, name, subjects:[{id,name,credit,grade}]}]
+
+function gradeOptions(selected){
+  return GRADES.map(g => `<option value="${g.point}" ${g.point===selected?'selected':''}>${g.label}</option>`).join('');
+}
+
+function addSemester(){
+  semCounter++;
+  state.push({
+    id: semCounter,
+    name: 'Semester ' + semCounter,
+    quickMode: false,
+    quickCredits: 0,
+    quickSgpa: 0,
+    subjects: [ newSubject(), newSubject() ]
+  });
+  render();
+}
+
+function toggleQuickMode(semId){
+  const sem = state.find(s => s.id === semId);
+  sem.quickMode = !sem.quickMode;
+  render();
+}
+
+function updateQuick(semId, field, value){
+  const sem = state.find(s => s.id === semId);
+  sem[field] = parseFloat(value) || 0;
+  computeAndPaint();
+}
+
+function newSubject(){
+  subCounter++;
+  return {id: subCounter, name:'', credit:3, grade:10};
+}
+
+function addSubject(semId){
+  const sem = state.find(s => s.id === semId);
+  sem.subjects.push(newSubject());
+  render();
+}
+
+function removeSubject(semId, subId){
+  const sem = state.find(s => s.id === semId);
+  sem.subjects = sem.subjects.filter(su => su.id !== subId);
+  render();
+}
+
+function removeSemester(semId){
+  state = state.filter(s => s.id !== semId);
+  render();
+}
+
+function updateSubject(semId, subId, field, value){
+  const sem = state.find(s => s.id === semId);
+  const sub = sem.subjects.find(su => su.id === subId);
+  if(field === 'credit') sub.credit = parseFloat(value) || 0;
+  else if(field === 'grade') sub.grade = parseFloat(value);
+  else sub.name = value;
+  computeAndPaint();
+}
+
+function updateSemName(semId, value){
+  const sem = state.find(s => s.id === semId);
+  sem.name = value;
+}
+
+function semGPA(sem){
+  if(sem.quickMode){
+    return {sgpa: sem.quickCredits ? sem.quickSgpa : 0, credits: sem.quickCredits};
+  }
+  let creditSum=0, weighted=0;
+  sem.subjects.forEach(su=>{
+    creditSum += su.credit;
+    weighted += su.credit * su.grade;
+  });
+  return {sgpa: creditSum ? (weighted/creditSum) : 0, credits: creditSum};
+}
+
+function computeAndPaint(){
+  let totalCredits=0, totalWeighted=0;
+  state.forEach(sem=>{
+    const {sgpa, credits} = semGPA(sem);
+    totalCredits += credits;
+    totalWeighted += credits * sgpa;
+    const el = document.getElementById('sgpa-'+sem.id);
+    if(el) el.textContent = credits ? 'SGPA ' + sgpa.toFixed(2) : 'SGPA —';
+  });
+  const cgpa = totalCredits ? (totalWeighted/totalCredits) : 0;
+  document.getElementById('cgpaValue').textContent = cgpa.toFixed(2);
+  document.getElementById('totalCredits').textContent = totalCredits + ' credits earned';
+}
+
+function render(){
+  const nav = document.getElementById('quickNav');
+  nav.innerHTML = state.map((sem, idx) => `<a href="#sem-${sem.id}">${idx+1}</a>`).join('');
+
+  const container = document.getElementById('semesters');
+  container.innerHTML = state.map(sem => `
+    <div class="semester" id="sem-${sem.id}">
+      <div class="sem-head">
+        <input class="sem-name" value="${sem.name}" oninput="updateSemName(${sem.id}, this.value)">
+        <span class="sem-sgpa" id="sgpa-${sem.id}">SGPA —</span>
+      </div>
+      <button class="mode-toggle" onclick="toggleQuickMode(${sem.id})">${sem.quickMode ? '↺ switch to subject-wise' : '⚡ switch to quick entry (credits + SGPA)'}</button>
+      ${sem.quickMode ? `
+        <div class="quick-fields">
+          <label>Total Credits<input type="number" min="0" step="0.5" value="${sem.quickCredits}" oninput="updateQuick(${sem.id}, 'quickCredits', this.value)"></label>
+          <label>SGPA<input type="number" min="0" max="10" step="0.01" value="${sem.quickSgpa}" oninput="updateQuick(${sem.id}, 'quickSgpa', this.value)"></label>
+        </div>
+      ` : `
+      <div class="col-labels"><span>Subject</span><span>Credit</span><span>Grade</span><span></span></div>
+      ${sem.subjects.map(su => `
+        <div class="subject-row">
+          <input type="text" placeholder="Subject name" value="${su.name}" oninput="updateSubject(${sem.id}, ${su.id}, 'name', this.value)">
+          <input type="number" min="0" max="10" step="0.5" value="${su.credit}" oninput="updateSubject(${sem.id}, ${su.id}, 'credit', this.value)">
+          <select class="grade" onchange="updateSubject(${sem.id}, ${su.id}, 'grade', this.value)">
+            ${gradeOptions(su.grade)}
+          </select>
+          <button class="rm-subject" title="Remove subject" onclick="removeSubject(${sem.id}, ${su.id})">×</button>
+        </div>
+      `).join('')}
+      <div class="sem-footer">
+        <button class="add-subject" onclick="addSubject(${sem.id})">+ Subject</button>
+        <button class="rm-semester" onclick="removeSemester(${sem.id})">remove semester</button>
+      </div>
+      `}
+    </div>
+  `).join('');
+  computeAndPaint();
+}
+
+// start with all 8 semesters ready for CGPA calculation
+for (let i = 0; i < 8; i++) addSemester();
+
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('sw.js').catch(()=>{});
+  });
+}
+</script>
+</body>
+</html>

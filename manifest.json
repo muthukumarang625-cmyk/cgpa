@@ -1,0 +1,14 @@
+{
+  "name": "CGPA Ledger",
+  "short_name": "CGPA Ledger",
+  "description": "Semester-wise CGPA calculator on the 10-point grading scale",
+  "start_url": "./index.html",
+  "display": "standalone",
+  "background_color": "#F2EDE1",
+  "theme_color": "#1B2A4A",
+  "orientation": "portrait",
+  "icons": [
+    { "src": "icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any maskable" },
+    { "src": "icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any maskable" }
+  ]
+}
